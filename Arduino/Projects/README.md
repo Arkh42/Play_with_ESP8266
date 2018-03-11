@@ -13,7 +13,14 @@ Failure is also a good way to learn. Especially when it is not for business ;)
 
 ## Projects ideas
 
-*Lorem ipsum*
+List of projects ideas:
+* Domotic (WEB interface)
+* Domotic (APP interface)
+* Smart Connection
+	* HTML interface to allow the user to choose and connect the ESP to a specific WiFi Access Point
+	* Tags: WiFi, HTML
+* Wireless Sensor Network
+
 
 
 ## Projects in progress
