@@ -3,9 +3,9 @@
  * \brief     Tutorial -- ESP8266 basics: WiFi use
  * \details   Learning ESP8266 basics: WiFi connection.
  *            A scan of available WiFi access points is done and information is displayed through Serial port.
- *            Then, ESP connects to the chosen AP.
+ *            Then, ESP connects to the chosen AP if it was detected during the scan and displays information through Serial port.
  * \author    Alexandre QUENON
- * \date      2018-03-12
+ * \date      2018-03-13
  * \copyright GNU Public License V3.0
  */
 
@@ -28,8 +28,11 @@ void init_serial( int long baud_rate );
 void config_as_station();
 
 int scan_WiFi_access_points();
-void display_param_access_point( int number );
-bool WiFi_access_point_is_found( const char* ssid );
+void display_param_access_point( int index_AP );
+bool is_defined_WiFi_access_point( int index_AP );
+
+void connect_to_access_point( const char* ssid_AP, const char* password_AP );
+void display_param_WiFi_connection();
 
 
 // Arduino base functions
@@ -53,7 +56,7 @@ void loop()
   auto ssid_detected = false;
   for( auto i = 0; i < nb_found_AP; ++i )
   {
-    if( WiFi_access_point_is_found( i ) )
+    if( is_defined_WiFi_access_point( i ) )
     {
       ssid_detected = true;
       break;
@@ -62,7 +65,18 @@ void loop()
 
   if( ssid_detected )
   {
-    //
+    Serial.printf( "Access point of SSID %s has been detected.\n", ssid );
+    connect_to_access_point( ssid, password );
+    display_param_WiFi_connection();
+
+    while( true )// Infinite loop
+    {
+      delay( 10000 );
+      if( WiFi.isConnected() )
+        Serial.println( "WiFi connection still alive! :)" );
+      else
+        Serial.println( "WiFi connection is dead! :(" );
+    }
   }
   else
   {
@@ -71,7 +85,7 @@ void loop()
   }
   
 
-  delay(5000);
+  delay( 5000 );
 }
 
 
@@ -85,13 +99,15 @@ void init_serial( int long baud_rate )
   Serial.println( " bauds.\n" );
 }
 
+
 void config_as_station()
 {
-  WiFi.mode( WIFI_STA );
+  WiFi.mode( WIFI_STA );// mode can be: WIFI_OFF, WIFI_STA, WIFI_AP, WIFI_AP_STA
   WiFi.disconnect();
 
   delay( 100 );
 }
+
 
 int scan_WiFi_access_points()
 {
@@ -103,13 +119,53 @@ int scan_WiFi_access_points()
 
   return nb_access_points;
 }
-void display_param_access_point( int number )
+void display_param_access_point( int index_AP )
 {
-  Serial.printf( "%d: %s (%d dBm)\n", number+1, WiFi.SSID( number ).c_str(), WiFi.RSSI( number ) );
+  Serial.printf( "%d: %s (%d dBm)\n", index_AP+1, WiFi.SSID( index_AP ).c_str(), WiFi.RSSI( index_AP ) );
 }
 
-bool WiFi_access_point_is_found( int index_AP )
+bool is_defined_WiFi_access_point( int index_AP )
 {
-  return ssid == WiFi.SSID( index_AP ).c_str();
+  return String( ssid ) == WiFi.SSID( index_AP );
+}
+
+
+void connect_to_access_point( const char* ssid_AP, const char* password_AP )
+{
+  Serial.printf( "Trying to connect to %s...", ssid_AP );
+  
+  WiFi.begin( ssid_AP, password_AP );
+
+  while ( WiFi.status() != WL_CONNECTED ) // status() can return: WL_CONNECTED, WL_NO_SSID_AVAIL, WL_CONNECT_FAILED, WL_IDLE_STATUS, WL_DISCONNECTED
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println( "\t connected!\n" );
+}
+
+void display_param_WiFi_connection()
+{
+  Serial.println( "WiFi connection's parameters:" );
+  
+  Serial.print( "- IP address: " );
+  Serial.println( WiFi.localIP() );
+
+  Serial.print( "- MAC address: " );
+  Serial.println( WiFi.macAddress() );
+
+  Serial.print( "- subnet mask address: " );
+  Serial.println( WiFi.subnetMask() );
+
+  Serial.print( "- gateway IP address: " );
+  Serial.println( WiFi.gatewayIP() );
+
+  Serial.print( "- DNS server IP address: " );
+  Serial.println( WiFi.dnsIP() );
+
+  Serial.print( "- host name: " );
+  Serial.println( WiFi.hostname() );
+
+  Serial.print( "\n" );
 }
 
